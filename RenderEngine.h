@@ -51,20 +51,22 @@ public:
         void rotateCW();
         void rotateCCW();
     };
-
+    Vector2 getCanvasSize();
+    char* getCanvasFrame();
     void clearScreen();
     canvas(Vector2 size);
     char getPixel(unsigned x, unsigned y);
+    char* getPixel(unsigned x, unsigned y, size_t n);
     void setPixel(unsigned x, unsigned y, char c);
-    void setPixel(Vector2 s_pos, char* s_c, Vector2 s_size);
+    void setPixel(Vector2 s_pos, char* s_c, Vector2 s_size, bool ignoreSpaces=true);
     char* generateFrame();
     void drawCanvas();
     canvas::sprite* createNewSprite(Vector2 size, Vector2 pos, const char* s);
     void deleteSprite(sprite* s);
     bool checkValid(char* s_c, Vector2 s_pos, Vector2 s_size);
-
-private:
     unsigned area;
+private:
+
     char* canvas2D;
     Vector2 size;
     std::vector<sprite*> spriteVec;
