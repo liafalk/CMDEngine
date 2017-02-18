@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
-project(RenderingEngine)
+project(RenderEngine)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(SOURCE_FILES main.cpp RenderEngine.cpp RenderEngine.h)
-add_executable(RenderingEngine ${SOURCE_FILES})
+set(SOURCE_FILES main.cpp RenderEngine/RenderEngine.cpp RenderEngine/RenderEngine.h RenderEngine/sprite.cpp RenderEngine/sprite.h RenderEngine/canvas.cpp RenderEngine/canvas.h)
+add_executable(RenderEngine ${SOURCE_FILES})
