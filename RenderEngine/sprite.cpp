@@ -1,94 +1,88 @@
-//
-// Created by Alex on 18-Feb-17.
-//
-
 #include "sprite.h"
-#include "RenderEngine.h"
 
+// CONSTRUCTOR
 sprite::sprite(Vector2 size, Vector2 pos, const char* initSprite)
-        : size(size), pos(pos), hidden(false), area(size.x*size.y)
-{
-    sprite2D = new char[area+1];
-    memset(sprite2D, ' ', area);
-    strcpy(sprite2D, initSprite);
-}
+        : size(size),
+          pos(pos),
+          hidden(false),
+          area(size.x*size.y),
+          sprite2D(initSprite, initSprite+(size.x*size.y))
+{}
 
+// GET
 char sprite::getPixel(unsigned x, unsigned y){
     return sprite2D[x+y*size.x];
 }
 
-char* sprite::spriteData(){
+std::vector<char> sprite::getSprite(){
     return sprite2D;
 }
 
-Vector2 sprite::spriteDim(){
+Vector2 sprite::getSize(){
     return size;
-}
-
-void sprite::spriteData(char* newSprite){
-    strcpy(sprite2D, newSprite);
 }
 
 Vector2 sprite::getPosition(){
     return pos;
 }
 
-void sprite::setPosition(unsigned x, unsigned y){
-    if (x >= size.x)
-        x = size.x;
-
-    if (y >= size.y)
-        y = size.y;
-
+// SET
+void sprite::setPosition(int x, int y){
     pos = {x,y};
-};
+}
 
-bool sprite::translate(int x, int y){
+void sprite::setSprite(const char* newSprite){
+    sprite2D = std::vector<char>(newSprite, newSprite+this->area);
+}
+
+// TRANSFORMATIONS
+bool sprite::translate(int x, int y, bool safe){
     Vector2 newPos = {x + pos.x, y + pos.y};
 
+    if (safe){
     // check if position is outside canvas
-    if(newPos.y < parent->size.y && newPos.x < parent->size.x && parent->checkValid(this->sprite2D, newPos, this->size)) {
+    if(newPos.y < parent->getCanvasSize().y && newPos.x < parent->getCanvasSize().x
+       && parent->checkValid(this->sprite2D, newPos, this->size)) {
         pos = newPos;
         return true;
     }
     else
         return false;
+    }
+    else{
+        pos = newPos;
+        return true;
+    }
 }
 
-void sprite::rotateCW(){
-    char* tempSprite = new char[area+1];
+bool sprite::rotate(int dir, bool safe){
+    std::vector<char> tempSprite(area, ' ');
     Vector2 newSize = {size.y, size.x};
-    memset(tempSprite, ' ', area);
-    for(int y=0; y<size.y; ++y){
-        for(int x=0; x<size.x; ++x){
-            tempSprite[(newSize.x-y-1)+x*(newSize.x)] = sprite2D[x+y*size.x];
+
+    //rotate clockwise
+    if(dir>0) {
+        for (int y = 0; y < size.y; ++y) {
+            for (int x = 0; x < size.x; ++x) {
+                tempSprite[(newSize.x - y - 1) + x * (newSize.x)] = sprite2D[x + y * size.x];
+            }
+        }
+    }
+    else{   //rotate counter-clockwise
+        for (int y = 0; y < size.y; ++y) {
+            for (int x = 0; x < size.x; ++x) {
+                tempSprite[y+(size.x-x-1)*newSize.x] = sprite2D[x+y*size.x];
+            }
         }
     }
 
-    //Vector2 newPos = {size.x-1-pos.y, pos.x};
-    if (parent->checkValid(tempSprite,this->pos,newSize)){
-        strcpy(sprite2D, tempSprite);
-        //this->pos = newPos;
-        this->size = newSize;
-    }
-    delete[] tempSprite;
-}
-
-void sprite::rotateCCW(){
-    char* tempSprite = new char[area+1];
-    Vector2 newSize = {size.y, size.x};
-    memset(tempSprite, ' ', area);
-    for(int y=0; y<size.y; ++y){
-        for(int x=0; x<size.x; ++x){
-            tempSprite[y+(size.x-x-1)*newSize.x] = sprite2D[x+y*size.x];
+    if (safe) {
+        if (parent->checkValid(tempSprite, this->pos, newSize)) {
+            std::swap(tempSprite, sprite2D);
+            this->size = newSize;
+            return true;
         }
+        else
+            return false;
     }
-
-    //Vector2 newPos = {pos.y, size.x-1-pos.x};
-    if (parent->checkValid(tempSprite,this->pos,newSize)){
-        strcpy(sprite2D, tempSprite);
-        //this->pos = newPos;
-        this->size = newSize;
-    }
-    delete[] tempSprite;
+    return true;
 }

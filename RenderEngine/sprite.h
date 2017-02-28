@@ -4,19 +4,21 @@
 
 #ifndef RENDERINGENGINE_SPRITE_H
 #define RENDERINGENGINE_SPRITE_H
+#include <iostream>
+#include <vector>
+#include "vector2.h"
+#include "canvas.h"
 
 class sprite
 {
     friend class canvas;
 private:
-    char* sprite2D;
+    std::vector<char> sprite2D;
     Vector2 size, pos;
     unsigned area, pos_z;
     canvas* parent;
-protected:
     // constructor
     sprite(Vector2 size, Vector2 pos, const char* initSprite);
-
 public:
     bool hidden;
 
@@ -25,16 +27,15 @@ public:
     void setPixel(unsigned x, unsigned y, char c);
 
     // data about the sprite
-    Vector2 spriteDim();
-    char* spriteData();
-    void spriteData(char* newSprite);
+    Vector2 getSize();
+    std::vector<char> getSprite();
+    void setSprite(const char* newSprite);
 
     // transform the sprite
     Vector2 getPosition();
-    void setPosition(unsigned x, unsigned y);
-    bool translate(int x, int y);
-    void rotateCW();
-    void rotateCCW();
+    void setPosition(int x, int y);
+    bool translate(int x, int y, bool safe);
+    bool rotate(int dir, bool safe);
 };
 
 #endif //RENDERINGENGINE_SPRITE_H

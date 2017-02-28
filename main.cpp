@@ -1,8 +1,10 @@
 #define _WIN32_WINNT 0x0500
-#include "RenderingEngine/RenderEngine.h"
-#include <stdio.h>
+#include "RenderEngine/RenderEngine.h"
+#include <string>
 #include <winbase.h>
 #include <random>
+#include <conio.h>
+#include <algorithm>
 
 #define KEY_UP 72
 #define KEY_DOWN 80
@@ -25,33 +27,35 @@ VOID CALLBACK handleInterrupt(){
 }
 
 int removeCompleteRows(canvas* canv){
-    char* frame = canv->getPixel(0,0,canv->area);
+    std::vector<char> frame = canv->getPixel(0,0,canv->area);
     Vector2 c_size = canv->getCanvasSize();
     int rowCount = 0;
-
+    std::string testStr = std::string(c_size.x, '+');
+    std::vector<char>::iterator rowBegin = frame.begin();
     for (int i=0; i<c_size.y; ++i){
-        if(memchr(&frame[i*c_size.x], ' ', c_size.x) == NULL){
-            memmove(frame+c_size.x, frame, i*c_size.x);
+        rowBegin += c_size.x;
+        std::string compStr = std::string(rowBegin, rowBegin+c_size.x);
+        if(!compStr.compare(testStr)){
+            std::move(frame.begin(), rowBegin, frame.begin()+c_size.x);
             rowCount++;
         }
     }
     canv->setPixel({0,0}, frame, c_size, false);
-    delete[] frame;
     return rowCount;
 }
 
 bool hasLost(canvas* canv){
     unsigned width = canv->getCanvasSize().x;
-    char* firstRow = canv->getPixel(0,0,width);
+    std::vector<char> firstRow = canv->getPixel(0,0,width);
     std::string test = std::string(width, ' ');
-    if(test.compare(firstRow)){
+    //test.compare(firstRow)
+    if(0){
         return true;
     }
-    delete[] firstRow;
     return false;
 }
 
-canvas::sprite* spawnRandomTetromino(canvas* canv, std::default_random_engine& randGen, std::uniform_int_distribution<int>& dist){
+sprite* spawnRandomTetromino(canvas* canv, std::default_random_engine& randGen, std::uniform_int_distribution<int>& dist){
     switch(dist(randGen)){
         case 0:
             return canv->createNewSprite({3,2},{0,0},spr_L1);
@@ -82,23 +86,24 @@ int main() {
     std::default_random_engine randGen;
     std::uniform_int_distribution<int> dist(0,6);
 
-    canvas::sprite* tetromino = spawnRandomTetromino(tetris, randGen, dist);
+    sprite* tetromino = spawnRandomTetromino(tetris, randGen, dist);
     tetris->drawCanvas();
 
     while(loop){
 
         if(interrupt){
             interrupt = false;
-            if (!tetromino->translate(0,1)){
+            if (!tetromino->translate(0,1, true)){
                 if(snagCount++ > 2){
-                    tetris->setPixel(tetromino->getPosition(),tetromino->spriteData(),tetromino->spriteDim());
+                    tetris->setPixel(tetromino->getPosition(),tetromino->getSprite(),tetromino->getSize());
                     tetris->deleteSprite(tetromino);
                     removeCompleteRows(tetris);
-                    if(hasLost(tetris)){
+                    if(0 && hasLost(tetris)){
                         loop = false;
                     }
                     else {
-                        canvas::sprite *tetromino = spawnRandomTetromino(tetris, randGen, dist);
+                        tetromino = spawnRandomTetromino(tetris, randGen, dist);
+                        snagCount = 0;
                         tetris->drawCanvas();
                     }
                 }
@@ -110,19 +115,19 @@ int main() {
         if (_kbhit()) {
             switch ((_getch())) {
                 case KEY_DOWN:
-                    tetromino->translate(0, 1);
+                    tetromino->translate(0, 1, true);
                     break;
                 case KEY_LEFT:
-                    tetromino->translate(-1, 0);
+                    tetromino->translate(-1, 0, true);
                     break;
                 case KEY_RIGHT:
-                    tetromino->translate(1, 0);
+                    tetromino->translate(1, 0, true);
                     break;
                 case 'z':
-                    tetromino->rotateCCW();
+                    tetromino->rotate(1, true);
                     break;
                 case 'x':
-                    tetromino->rotateCW();
+                    tetromino->rotate(-1, true);
                     break;
                 case ESC:
                     loop = false;
