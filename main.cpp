@@ -5,6 +5,7 @@
 #include <random>
 #include <conio.h>
 #include <algorithm>
+#include <chrono>
 
 #define KEY_UP 72
 #define KEY_DOWN 80
@@ -48,15 +49,15 @@ bool hasLost(canvas* canv){
     unsigned width = canv->getCanvasSize().x;
     std::vector<char> firstRow = canv->getPixel(0,0,width);
     std::string test = std::string(width, ' ');
-    //test.compare(firstRow)
-    if(0){
+    std::string compStr = std::string(firstRow.begin(), firstRow.end());
+    if(compStr.compare(test)){
         return true;
     }
     return false;
 }
 
-sprite* spawnRandomTetromino(canvas* canv, std::default_random_engine& randGen, std::uniform_int_distribution<int>& dist){
-    switch(dist(randGen)){
+sprite* spawnRandomTetromino(canvas* canv, int randomVal){
+    switch(randomVal){
         case 0:
             return canv->createNewSprite({3,2},{0,0},spr_L1);
         case 1:
@@ -83,10 +84,10 @@ int main() {
     HANDLE hTimer = NULL;
     CreateTimerQueueTimer(&hTimer, NULL, (WAITORTIMERCALLBACK)handleInterrupt,NULL,500,500,0 );
 
-    std::default_random_engine randGen;
+    std::mt19937 randGen(std::chrono::high_resolution_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> dist(0,6);
 
-    sprite* tetromino = spawnRandomTetromino(tetris, randGen, dist);
+    sprite* tetromino = spawnRandomTetromino(tetris, dist(randGen));
     tetris->drawCanvas();
 
     while(loop){
@@ -98,11 +99,11 @@ int main() {
                     tetris->setPixel(tetromino->getPosition(),tetromino->getSprite(),tetromino->getSize());
                     tetris->deleteSprite(tetromino);
                     removeCompleteRows(tetris);
-                    if(0 && hasLost(tetris)){
+                    if(hasLost(tetris)){
                         loop = false;
                     }
                     else {
-                        tetromino = spawnRandomTetromino(tetris, randGen, dist);
+                        tetromino = spawnRandomTetromino(tetris, dist(randGen));
                         snagCount = 0;
                         tetris->drawCanvas();
                     }
